@@ -1,0 +1,66 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.azzhu.myo2o.mapper.ChartMapper">
+    <select id="getTop5Product" parameterType="map" resultType="map">
+        select product_name,sum(product_quantity) total_count
+        from tb_order_detail
+        <where>
+            <choose>
+                <when test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+                    create_time between #{startTime} and #{endTime}
+                </when>
+                <when test="month!=null and month!=''">
+                    date_format(create_time,'%￥-%m')=#{month}
+                </when>
+            </choose>
+        </where>
+        group by product_name
+        order by sum(product_quantity) desc limit 5;
+    </select>
+    <!--  订单状态分析 -->
+    <select id="getOrderStatus" parameterType="map" resultType="map">
+        select
+        sum(if(order_status=0,1,0)) 'finish',
+        sum(if(order_status=1,1,0)) 'cancel',
+         sum(if(pay_status=0,1,0)) 'finish_pay',
+          sum(if(pay_status=1,1,0)) 'wait_pay'
+          from tb_order
+          <where>
+              <choose>
+                  <when test="startTime!=null and starttTime!='' and endTime!=null and endTime!=''">
+                      create_time between #{startTime} and #{endTime}
+                  </when>
+                  <when test="month!=null and month !=''">
+                      date_format(create_time,'%￥-%m')=#{month}
+                  </when>
+              </choose>
+          </where>
+    </select>
+
+    <select id="getTop5Product" parameterType="map" resultType="map">
+        select date_format(create_time,'%￥-%m-%d') order_time,sum(order_amount) total_amount
+        from tb_order
+        where pay_status=0
+
+            <choose>
+                <when test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+                  and  create_time  between #{startTime} and #{endTime}
+                  group by date_format(create_time,'%￥-%m-%d')
+                </when>
+                <when test="month!=null and month!= '' ">
+                  and  date_format(create_time,'%￥-%m')=#{month}
+                    group by date_format(create_time,'%￥-%m')
+                </when>
+                <otherwise>
+                    group by date_format(create_time,'%￥-%m-%d')
+                </otherwise>
+            </choose>
+
+        group by product_name
+        order by sum(product_quantity) desc limit 5;
+    </select>
+
+</mapper>
